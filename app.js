@@ -96,11 +96,6 @@ function drawTable() {
 // Primeira chamada
 drawTable();
 
-// Se o problema ocorrer após um evento, garanta que `drawTable()` seja chamado corretamente:
-// Exemplo: Redesenhar ao clicar no canvas
-canvas.addEventListener('click', () => {
-    drawTable();
-});
 
 
 
