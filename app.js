@@ -139,6 +139,7 @@ canvas.addEventListener('mousemove', function(e) {
 
         // Desenha o painel solar na nova posição
         ctx.clearRect(0,0, canvas.width, canvas.height);
+        drawTable();
         drawSolarPanel(ctx, newX, newY, 12 * unidade, 8 * unidade, 4, 6);
     }
 });
