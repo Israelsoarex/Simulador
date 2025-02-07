@@ -23,32 +23,77 @@ let panelY = unidade;
 
 // Desenha o tabuleiro
 function drawTable() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height); // Apagar tudo
+    // Desenha os quadrados de fundo
     for (let row = 0; row < rows; row++) {
         for (let col = 0; col < cols; col++) {
-            let x = col * squareSize;
-            let y = row * squareSize;
+            // Calculando a posição de cada quadrado
+            let x = col * (squareSize);
+            let y = row * (squareSize); 
+
+            // Desenhando o quadrado
             ctx.fillStyle = '#ddd';
             ctx.fillRect(x, y, squareSize, squareSize);
+        }        
+    }
+
+    // Criar linhas cinzas (primeiro desenha as linhas de fundo)
+    for (let i = 0; i < rows * 4; i++) {
+        if (i % 4 !== 0) { // Apenas as cinzas
+            ctx.strokeStyle = '#ccc';
+            ctx.beginPath();
+            ctx.moveTo(0, i * (squareSize/4));
+            ctx.lineTo(canvas.width, i * (squareSize/4));
+            ctx.stroke();
         }
     }
 
+    for (let j = 0; j < cols * 4; j++) {
+        if (j % 4 !== 0) { // Apenas as cinzas
+            ctx.strokeStyle = '#ccc';
+            ctx.beginPath();
+            ctx.moveTo(j * (squareSize/4), 0);
+            ctx.lineTo(j * (squareSize/4), canvas.height);
+            ctx.stroke();
+        }
+    }
+
+    // Criar linhas pretas (depois desenha as linhas principais)
     for (let i = 0; i < rows * 4; i++) {
-        ctx.strokeStyle = (i % 4 === 0) ? '#000' : '#ccc';
-        ctx.beginPath();
-        ctx.moveTo(0, i * unidade);
-        ctx.lineTo(canvas.width, i * unidade);
-        ctx.stroke();
+        if (i % 4 === 0) { // Apenas as pretas
+            ctx.strokeStyle = '#000';
+            ctx.beginPath();
+            ctx.moveTo(0, i * (squareSize/4));
+            ctx.lineTo(canvas.width, i * (squareSize/4));
+            ctx.stroke();
+        }
     }
 
     for (let j = 0; j < cols * 4; j++) {
-        ctx.strokeStyle = (j % 4 === 0) ? '#000' : '#ccc';
-        ctx.beginPath();
-        ctx.moveTo(j * unidade, 0);
-        ctx.lineTo(j * unidade, canvas.height);
-        ctx.stroke();
+        if (j % 4 === 0) { // Apenas as pretas
+            ctx.strokeStyle = '#000';
+            ctx.beginPath();
+            ctx.moveTo(j * (squareSize/4), 0);
+            ctx.lineTo(j * (squareSize/4), canvas.height);
+            ctx.stroke();
+        }
+    }
+
+    // Criar círculos (desenhando os círculos sobre as linhas)
+    for (let row = 0; row < rows - 1; row++) {
+        for (let col = 0; col < cols - 1; col++) {
+            let x = (col + 1) * squareSize; 
+            let y = (row + 1) * squareSize;
+
+            ctx.fillStyle = 'black';
+            ctx.beginPath();
+            ctx.arc(x, y, 5, 0, Math.PI * 2);
+            ctx.fill();
+        }
     }
 }
+
+drawTable();
+
 
 function drawRoundedRect(ctx, x, y, width, height, radius, fillColor, strokeColor, lineWidth) {
     ctx.beginPath();
