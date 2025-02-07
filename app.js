@@ -120,22 +120,31 @@ function drawSolarPanel(ctx, x, y, width, height, rows, cols) {
 }
 // Variáveis de controle de arrasto
 let dragging = false;
-let offsetX, offsetY;
+let offsetX = 0;
+let offsetY = 0;
+let newX = 0;
+let newY = 0;
+
 
 // Evento para iniciar o arrasto
 canvas.addEventListener('mousedown', function(e) {
     dragging = true;
     // Posição inicial de onde o mouse foi pressionado
-    offsetX = e.offsetX;
-    offsetY = e.offsetY;
+    if(offsetX == 0 && offsetY == 0){
+        offsetX = e.offsetX;
+        offsetY = e.offsetY;
+    } else{
+        offsetX = newX;
+        offsetY = newY;
+    }
 });
 
 // Evento para atualizar a posição enquanto arrasta
 canvas.addEventListener('mousemove', function(e) {
     if (dragging) {
         // Calcula o novo X e Y com base no movimento
-        let newX = e.offsetX - offsetX;
-        let newY = e.offsetY - offsetY;
+        newX = e.offsetX - offsetX;
+        newY = e.offsetY - offsetY;
 
         // Desenha o painel solar na nova posição
         ctx.clearRect(0,0, canvas.width, canvas.height);
@@ -147,6 +156,7 @@ canvas.addEventListener('mousemove', function(e) {
 // Evento para parar o arrasto
 canvas.addEventListener('mouseup', function() {
     dragging = false;
+    
 });
 
 
