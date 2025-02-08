@@ -419,8 +419,10 @@ canvas.addEventListener('touchend', () => {
 
 // Inicializa o desenho
 redraw();
+
 let isDrawing = false;  // Controla se o usuário está desenhando
 let startX, startY;  // Armazenam a posição inicial do mouse
+let wireEndX, wireEndY;  // Armazenam a posição final da linha
 
 // Função para desenhar fios
 function drawWire(x1, y1, x2, y2) {
@@ -438,9 +440,16 @@ canvas.addEventListener('mousedown', (event) => {
     const mouseX = event.offsetX;
     const mouseY = event.offsetY;
 
-    // Verifica se o mouse clicou em um painel ou na bateria
+    // Verifica se o mouse clicou na saída positiva ou negativa da bateria
+    if (mouseX >= bateria.x + bateria.width - 35 && mouseX <= bateria.x + bateria.width - 5 &&
+        mouseY >= bateria.y - 20 && mouseY <= bateria.y) {
+        isDrawing = true;
+        startX = mouseX;
+        startY = mouseY;
+    }
+
+    // Verifica se o mouse clicou em algum painel solar
     panels.forEach(panel => {
-        // Verifica se o clique foi dentro da área de saída de fio do painel
         if (mouseX >= panel.x - 10 && mouseX <= panel.x + panel.width + 10 &&
             mouseY >= panel.y + panel.height / 2 - 10 && mouseY <= panel.y + panel.height / 2 + 10) {
             isDrawing = true;
@@ -448,22 +457,33 @@ canvas.addEventListener('mousedown', (event) => {
             startY = mouseY;
         }
     });
-
-    if (mouseX >= bateria.x + bateria.width - 35 && mouseX <= bateria.x + bateria.width - 5 &&
-        mouseY >= bateria.y - 20 && mouseY <= bateria.y) {
-        isDrawing = true;
-        startX = mouseX;
-        startY = mouseY;
-    }
 });
+
+// Função para ajustar o movimento da linha para ser apenas horizontal ou vertical
+function adjustLine(mouseX, mouseY) {
+    if (Math.abs(mouseX - startX) > Math.abs(mouseY - startY)) {
+        // Movimento horizontal
+        wireEndX = mouseX;
+        wireEndY = startY;
+    } else {
+        // Movimento vertical
+        wireEndX = startX;
+        wireEndY = mouseY;
+    }
+}
 
 // Função para mover o fio enquanto o mouse se move
 canvas.addEventListener('mousemove', (event) => {
     if (isDrawing) {
-        redraw();  // Redesenha todos os componentes do painel, bateria, etc.
         const mouseX = event.offsetX;
         const mouseY = event.offsetY;
-        drawWire(startX, startY, mouseX, mouseY);  // Desenha o fio enquanto o mouse move
+
+        // Ajusta o movimento da linha para ser apenas horizontal ou vertical
+        adjustLine(mouseX, mouseY);
+
+        // Redesenha tudo (componentes, fios, etc.)
+        redraw();
+        drawWire(startX, startY, wireEndX, wireEndY);  // Desenha o fio enquanto o mouse move
     }
 });
 
@@ -477,13 +497,14 @@ canvas.addEventListener('mouseup', (event) => {
         panels.forEach(panel => {
             if (mouseX >= panel.x - 10 && mouseX <= panel.x + panel.width + 10 &&
                 mouseY >= panel.y + panel.height / 2 - 10 && mouseY <= panel.y + panel.height / 2 + 10) {
-                drawWire(startX, startY, panel.x + panel.width + 10, panel.y + panel.height / 2); // Conecta no painel
+                drawWire(wireEndX, wireEndY, panel.x + panel.width + 10, panel.y + panel.height / 2); // Conecta no painel
             }
         });
 
+        // Conecta à bateria
         if (mouseX >= bateria.x + bateria.width - 35 && mouseX <= bateria.x + bateria.width - 5 &&
             mouseY >= bateria.y - 20 && mouseY <= bateria.y) {
-            drawWire(startX, startY, bateria.x + bateria.width - 35, bateria.y - 10); // Conecta na bateria
+            drawWire(wireEndX, wireEndY, bateria.x + bateria.width - 35, bateria.y - 10); // Conecta na bateria
         }
 
         isDrawing = false;
