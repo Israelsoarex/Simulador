@@ -419,94 +419,83 @@ canvas.addEventListener('touchend', () => {
 
 // Inicializa o desenho
 redraw();
+let isDrawingWire = false;
+let wireStartX, wireStartY;
+let wireEndX, wireEndY;
 
-let isDrawing = false;  // Controla se o usuário está desenhando
-let startX, startY;  // Armazenam a posição inicial do mouse
-let wireEndX, wireEndY;  // Armazenam a posição final da linha
-
-// Função para desenhar fios
-function drawWire(x1, y1, x2, y2) {
-    ctx.strokeStyle = '#000';  // Cor do fio
-    ctx.lineWidth = 2;  // Espessura da linha
-    ctx.beginPath();
-    ctx.moveTo(x1, y1);  // Ponto inicial
-    ctx.lineTo(x2, y2);  // Ponto final
-    ctx.stroke();
+function startDrawingWire(x, y) {
+    isDrawingWire = true;
+    wireStartX = x;
+    wireStartY = y;
+    wireEndX = x;
+    wireEndY = y;
 }
 
-// Adiciona a interação do mouse
-canvas.addEventListener('mousedown', (event) => {
-    // Captura a posição do mouse ao clicar
-    const mouseX = event.offsetX;
-    const mouseY = event.offsetY;
-
-    // Verifica se o mouse clicou na saída positiva ou negativa da bateria
-    if (mouseX >= bateria.x + bateria.width - 35 && mouseX <= bateria.x + bateria.width - 5 &&
-        mouseY >= bateria.y - 20 && mouseY <= bateria.y) {
-        isDrawing = true;
-        startX = mouseX;
-        startY = mouseY;
-    }
-
-    // Verifica se o mouse clicou em algum painel solar
-    panels.forEach(panel => {
-        if (mouseX >= panel.x - 10 && mouseX <= panel.x + panel.width + 10 &&
-            mouseY >= panel.y + panel.height / 2 - 10 && mouseY <= panel.y + panel.height / 2 + 10) {
-            isDrawing = true;
-            startX = mouseX;
-            startY = mouseY;
-        }
-    });
-});
-
-// Função para ajustar o movimento da linha para ser apenas horizontal ou vertical
-function adjustLine(mouseX, mouseY) {
-    if (Math.abs(mouseX - startX) > Math.abs(mouseY - startY)) {
-        // Movimento horizontal
-        wireEndX = mouseX;
-        wireEndY = startY;
-    } else {
-        // Movimento vertical
-        wireEndX = startX;
-        wireEndY = mouseY;
-    }
-}
-
-// Função para mover o fio enquanto o mouse se move
-canvas.addEventListener('mousemove', (event) => {
-    if (isDrawing) {
-        const mouseX = event.offsetX;
-        const mouseY = event.offsetY;
-
-        // Ajusta o movimento da linha para ser apenas horizontal ou vertical
-        adjustLine(mouseX, mouseY);
-
-        // Redesenha tudo (componentes, fios, etc.)
+function updateWirePosition(x, y) {
+    if (isDrawingWire) {
+        wireEndX = x;
+        wireEndY = y;
         redraw();
-        drawWire(startX, startY, wireEndX, wireEndY);  // Desenha o fio enquanto o mouse move
     }
+}
+
+function stopDrawingWire() {
+    if (isDrawingWire) {
+        isDrawingWire = false;
+        redraw();
+    }
+}
+
+function drawWire(ctx) {
+    if (isDrawingWire) {
+        ctx.beginPath();
+        ctx.moveTo(wireStartX, wireStartY);
+        ctx.lineTo(wireEndX, wireEndY);
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+    }
+}
+
+// Adicionando os listeners para o mouse
+canvas.addEventListener('mousedown', (e) => {
+    startDrawingWire(e.offsetX, e.offsetY);
 });
 
-// Finaliza a linha quando o mouse é solto
-canvas.addEventListener('mouseup', (event) => {
-    if (isDrawing) {
-        const mouseX = event.offsetX;
-        const mouseY = event.offsetY;
-
-        // Verifica se o mouse está sobre a bateria ou painel para finalizar a conexão
-        panels.forEach(panel => {
-            if (mouseX >= panel.x - 10 && mouseX <= panel.x + panel.width + 10 &&
-                mouseY >= panel.y + panel.height / 2 - 10 && mouseY <= panel.y + panel.height / 2 + 10) {
-                drawWire(wireEndX, wireEndY, panel.x + panel.width + 10, panel.y + panel.height / 2); // Conecta no painel
-            }
-        });
-
-        // Conecta à bateria
-        if (mouseX >= bateria.x + bateria.width - 35 && mouseX <= bateria.x + bateria.width - 5 &&
-            mouseY >= bateria.y - 20 && mouseY <= bateria.y) {
-            drawWire(wireEndX, wireEndY, bateria.x + bateria.width - 35, bateria.y - 10); // Conecta na bateria
-        }
-
-        isDrawing = false;
-    }
+canvas.addEventListener('mousemove', (e) => {
+    updateWirePosition(e.offsetX, e.offsetY);
 });
+
+canvas.addEventListener('mouseup', () => {
+    stopDrawingWire();
+});
+
+// Adicionando os listeners para touch (para dispositivos móveis)
+canvas.addEventListener('touchstart', (e) => {
+    let touch = e.touches[0];
+    let rect = canvas.getBoundingClientRect();
+    let x = touch.clientX - rect.left;
+    let y = touch.clientY - rect.top;
+    startDrawingWire(x, y);
+});
+
+canvas.addEventListener('touchmove', (e) => {
+    let touch = e.touches[0];
+    let rect = canvas.getBoundingClientRect();
+    let x = touch.clientX - rect.left;
+    let y = touch.clientY - rect.top;
+    updateWirePosition(x, y);
+});
+
+canvas.addEventListener('touchend', () => {
+    stopDrawingWire();
+});
+
+// Modifique a função redraw para incluir o desenho do fio
+function redraw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawTable();
+    panels.forEach(panel => panel.draw(ctx, panels));
+    bateria.draw(ctx);
+    drawWire(ctx); // Adiciona o desenho do fio
+                        }
