@@ -419,3 +419,73 @@ canvas.addEventListener('touchend', () => {
 
 // Inicializa o desenho
 redraw();
+let isDrawing = false;  // Controla se o usuário está desenhando
+let startX, startY;  // Armazenam a posição inicial do mouse
+
+// Função para desenhar fios
+function drawWire(x1, y1, x2, y2) {
+    ctx.strokeStyle = '#000';  // Cor do fio
+    ctx.lineWidth = 2;  // Espessura da linha
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);  // Ponto inicial
+    ctx.lineTo(x2, y2);  // Ponto final
+    ctx.stroke();
+}
+
+// Adiciona a interação do mouse
+canvas.addEventListener('mousedown', (event) => {
+    // Captura a posição do mouse ao clicar
+    const mouseX = event.offsetX;
+    const mouseY = event.offsetY;
+
+    // Verifica se o mouse clicou em um painel ou na bateria
+    panels.forEach(panel => {
+        // Verifica se o clique foi dentro da área de saída de fio do painel
+        if (mouseX >= panel.x - 10 && mouseX <= panel.x + panel.width + 10 &&
+            mouseY >= panel.y + panel.height / 2 - 10 && mouseY <= panel.y + panel.height / 2 + 10) {
+            isDrawing = true;
+            startX = mouseX;
+            startY = mouseY;
+        }
+    });
+
+    if (mouseX >= bateria.x + bateria.width - 35 && mouseX <= bateria.x + bateria.width - 5 &&
+        mouseY >= bateria.y - 20 && mouseY <= bateria.y) {
+        isDrawing = true;
+        startX = mouseX;
+        startY = mouseY;
+    }
+});
+
+// Função para mover o fio enquanto o mouse se move
+canvas.addEventListener('mousemove', (event) => {
+    if (isDrawing) {
+        redraw();  // Redesenha todos os componentes do painel, bateria, etc.
+        const mouseX = event.offsetX;
+        const mouseY = event.offsetY;
+        drawWire(startX, startY, mouseX, mouseY);  // Desenha o fio enquanto o mouse move
+    }
+});
+
+// Finaliza a linha quando o mouse é solto
+canvas.addEventListener('mouseup', (event) => {
+    if (isDrawing) {
+        const mouseX = event.offsetX;
+        const mouseY = event.offsetY;
+
+        // Verifica se o mouse está sobre a bateria ou painel para finalizar a conexão
+        panels.forEach(panel => {
+            if (mouseX >= panel.x - 10 && mouseX <= panel.x + panel.width + 10 &&
+                mouseY >= panel.y + panel.height / 2 - 10 && mouseY <= panel.y + panel.height / 2 + 10) {
+                drawWire(startX, startY, panel.x + panel.width + 10, panel.y + panel.height / 2); // Conecta no painel
+            }
+        });
+
+        if (mouseX >= bateria.x + bateria.width - 35 && mouseX <= bateria.x + bateria.width - 5 &&
+            mouseY >= bateria.y - 20 && mouseY <= bateria.y) {
+            drawWire(startX, startY, bateria.x + bateria.width - 35, bateria.y - 10); // Conecta na bateria
+        }
+
+        isDrawing = false;
+    }
+});
