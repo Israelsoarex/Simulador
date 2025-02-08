@@ -1,3 +1,4 @@
+
 let canvas = document.querySelector('canvas');
 let ctx = canvas.getContext('2d');
 
@@ -126,7 +127,7 @@ drawControler(16*unidade, 4*unidade, 9*unidade, 5*unidade)
 
 
 class Painel {
-    constructor(x, y, width, height, rows, cols) {
+    constructor(x, y, width, height, rows, cols, label = "Painel Solar") {
         this.x = x;
         this.y = y;
         this.width = width;
@@ -137,12 +138,13 @@ class Painel {
         this.startX = 0;
         this.startY = 0;
         this.colliding = false;
-        this.backupX = x;  // Novo atributo para armazenar a posição X de backup
-        this.backupY = y;  // Novo atributo para armazenar a posição Y de backup
+        this.backupX = x;  
+        this.backupY = y;
+        this.label = label;
     }
 
     draw(ctx, panels) {
-    this.colliding = panels.some(panel => panel !== this && checkCollision(this, panel));
+    this.colliding = panels.some(panel => panel !== this && checkCollision(this, panel)) || checkCollision(this, bateria);
     const borderColor = this.colliding ? 'red' : '#000';
     
     // Desenha os retângulos para os símbolos "+" e "-" à direita
@@ -193,7 +195,9 @@ ctx.fillText('-', this.x + this.width + 15 + symbolPadding, this.y + 90); // Pos
     }
 }
 
-
+       ctx.font = 'bold 1.5rem Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(this.label, this.x + this.width / 2, this.y + this.height + 50);
     // Saídas para fios (circular)
     const wireExitSize = 10;
     ctx.beginPath();
@@ -244,19 +248,19 @@ ctx.fillText('-', this.x + this.width + 15 + symbolPadding, this.y + 90); // Pos
 }
 
 // Função para verificar colisões
-function checkCollision(pn1, pn2) {
-    return !(pn1.x + pn1.width < pn2.x || 
-             pn1.x > pn2.x + pn2.width || 
-             pn1.y + pn1.height < pn2.y || 
-             pn1.y > pn2.y + pn2.height);
+function checkCollision(obj1, obj2) {
+    return !(obj1.x + obj1.width < obj2.x || 
+             obj1.x > obj2.x + obj2.width || 
+             obj1.y + obj1.height < obj2.y || 
+             obj1.y > obj2.y + obj2.height);
 }
 
-// Função para desenhar a mesa (tabuleiro)
+
 function redraw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawTable();
     panels.forEach(panel => panel.draw(ctx, panels));
-    bateria.draw(ctx)
+    bateria.draw(ctx);
 }
 
 let panels = [
@@ -272,58 +276,62 @@ let panels = [
 
 // Classe Bateria com movimentação e verificação de colisões
 class Bateria {
-    constructor(x, y, width, height) {
-        this.x = x; // Posição X da bateria
-        this.y = y; // Posição Y da bateria
-        this.width = width; // Largura da bateria
-        this.height = height; // Altura da bateria
+    constructor(x, y, width, height, label="Bateria") {
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
         this.dragging = false;
         this.startX = 0;
         this.startY = 0;
         this.backupX = x;
         this.backupY = y;
-        this.colliding = false; // Verificação de colisão
+        this.label = label;
+        this.colliding = false;
     }
 
-    // Função para desenhar a bateria no canvas
     draw(ctx) {
-        // Cor de fundo da bateria
-        ctx.fillStyle = '#333'; // Cor cinza escuro para o corpo da bateria
-        ctx.fillRect(this.x, this.y, this.width, this.height);
+    this.colliding = panels.some(panel => panel !== this && checkCollision(this, panel));
+    // corpo da bateria
+    ctx.fillStyle = '#333';
+    ctx.fillRect(this.x, this.y, this.width, this.height);
+    // parte superior
+    ctx.fillStyle = '#888';
+    ctx.fillRect(this.x + 10, this.y - 10, this.width - 20, 10);
+    // polo positivo
+    ctx.fillStyle = '#EF476F';
+    ctx.fillRect(this.x + this.width - 35, this.y - 20, 30, 20);
+    // polo negativo
+    ctx.fillStyle = '#118AB2';
+    ctx.fillRect(this.x + 5, this.y - 20, 30, 20);
+    // parte central
+    ctx.fillStyle = '#777';
+    ctx.fillRect(this.x + 15, this.y + 10, this.width - 30, this.height - 20);
+    // label
+    ctx.font = 'bold 1.5rem Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(this.label, this.x + this.width / 2, this.y + this.height + 50);
+    // relâmpago
+    ctx.font = '48px sans-serif';
+    ctx.fillStyle = '#FFD700';
+    ctx.fillText('⚡', this.x + this.width / 2, (this.y + this.height / 2) + 12);
+    
+    // símbolos de + e - no polo
+    ctx.font = 'bold 1.2rem Arial';
+    ctx.fillStyle = '#FFF';
+    ctx.fillText('+', this.x + this.width - 20, this.y - 2); // Polo positivo
+    ctx.fillText('-', this.x + 20, this.y - 2); // Polo negativo
 
-        // Detalhes da parte superior (poliços)
-        ctx.fillStyle = '#888'; // Cor do detalhe de cima
-        ctx.fillRect(this.x + 10, this.y - 10, this.width - 20, 10);
+    // borda da bateria
+    ctx.strokeStyle = this.colliding ? 'red' : '#000';
+    ctx.lineWidth = this.colliding ? 3 : 2;
+    ctx.strokeRect(this.x, this.y, this.width, this.height);
+}
 
-        // Polos positivo e negativo
-        ctx.fillStyle = '#EF476F'; // Polo positivo (vermelho)
-        ctx.fillRect(this.x + this.width - 15, this.y - 20, 10, 20); // Polo positivo
-        ctx.fillStyle = '#118AB2'; // Polo negativo (azul)
-        ctx.fillRect(this.x + 5, this.y - 20, 10, 20); // Polo negativo
-
-        // Detalhe interno da bateria (conectores)
-        ctx.fillStyle = '#666'; // Parte interna
-        ctx.fillRect(this.x + 15, this.y + 10, this.width - 30, this.height - 20); // Parte interna
-
-        // Contorno da bateria
-        ctx.strokeStyle = '#000'; // Cor da borda
-        ctx.lineWidth = 2;
-        ctx.strokeRect(this.x, this.y, this.width, this.height);
-
-        // Se houver colisão, mudar a borda para vermelho
-        if (this.colliding) {
-            ctx.strokeStyle = 'red';
-            ctx.lineWidth = 3;
-            ctx.strokeRect(this.x, this.y, this.width, this.height);
-        }
-    }
-
-    // Verifica se o ponto (x, y) está dentro da bateria
     isInside(x, y) {
         return x >= this.x && x <= this.x + this.width && y >= this.y && y <= this.y + this.height;
     }
 
-    // Inicia o arraste
     startDrag(x, y) {
         if (this.isInside(x, y)) {
             this.dragging = true;
@@ -334,28 +342,25 @@ class Bateria {
         }
     }
 
-    // Mover a bateria
     move(x, y, canvas) {
         if (this.dragging) {
-            this.x = Math.max(unidade, Math.min(x - this.startX, canvas.width - this.width-unidade));
-            this.y = Math.max(unidade, Math.min(y - this.startY, canvas.height - this.height-unidade));
+            this.x = Math.max(unidade, Math.min(x - this.startX, canvas.width - this.width - unidade));
+            this.y = Math.max(unidade, Math.min(y - this.startY, canvas.height - this.height - unidade));
+            this.colliding = panels.some(panel => checkCollision(this, panel));
         }
     }
 
-    // Para o arraste e verifica colisão com outros objetos
-    stopDrag(paineis) {
+    stopDrag(panels) {
         this.dragging = false;
-        this.colliding = paineis.some(panel => panel !== this && checkCollision(this, panel));
+        this.colliding = panels.some(panel => checkCollision(this, panel));
 
-        // Se colidir, retornar à posição original
         if (this.colliding) {
             this.x = this.backupX;
             this.y = this.backupY;
-            
-        }else{
-                this.backupX = this.x;
-                this.backupY = this.y;
-            }
+        } else {
+            this.backupX = this.x;
+            this.backupY = this.y;
+        }
     }
 }
 
@@ -369,98 +374,21 @@ bateria.draw(ctx);
 
 canvas.addEventListener('mousedown', (e) => {
     panels.forEach(panel => panel.startDrag(e.offsetX, e.offsetY));
+    bateria.startDrag(e.offsetX, e.offsetY);
 });
 
 canvas.addEventListener('mousemove', (e) => {
     panels.forEach(panel => panel.move(e.offsetX, e.offsetY, canvas));
+    bateria.move(e.offsetX, e.offsetY, canvas);
     redraw();
 });
 
 canvas.addEventListener('mouseup', () => {
     panels.forEach(panel => panel.stopDrag());
-});
-
-// Eventos de toque
-canvas.addEventListener('touchstart', (e) => {
-    let touch = e.touches[0];
-    let rect = canvas.getBoundingClientRect();
-    let x = touch.clientX - rect.left;
-    let y = touch.clientY - rect.top;
-
-    panels.forEach(panel => panel.startDrag(x, y));
-    
-    bateria.startDrag(x, y);
-});
-
-canvas.addEventListener('touchmove', (e) => {
-    let touch = e.touches[0];
-    let rect = canvas.getBoundingClientRect();
-    let x = touch.clientX - rect.left;
-    let y = touch.clientY - rect.top;
-
-    panels.forEach(panel => panel.move(x, y, canvas));
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawTable();
-    panels.forEach(panel => panel.draw(ctx, panels));
-    
-    bateria.move(x, y, canvas);
-    bateria.draw(ctx)
-    for (let i = 0; i < panels.length; i++) {
-        for (let j = i + 1; j < panels.length; j++) {
-            if (checkCollision(panels[i], panels[j])) {
-                console.log("Painéis colidiram");
-            }
-        }
-    }
-    for (let i = 0; i < panels.length; i++) {
-    if (checkCollision(panels[i], bateria)) {
-        console.log("Colidiu");
-        bateria.colliding = true;
-    } else{
-        bateria.colliding = false;
-    }
-}
-});
-
-canvas.addEventListener('touchend', () => {
     bateria.stopDrag(panels);
-    panels.forEach(panel => panel.stopDrag());
-   
+    redraw();
 });
 
-
-// Função para verificar colisão entre a bateria e os painéis
-function checkCollisionBateria(painel, bateria) {
-    return !(painel.x + painel.width < bateria.x || 
-             painel.x > bateria.x + bateria.width || 
-             painel.y + painel.height < bateria.y || 
-             painel.y > bateria.y + bateria.height);
-}
-
-canvas.addEventListener('touchmove', (e) => {
-    let touch = e.touches[0];
-    let rect = canvas.getBoundingClientRect();
-    let x = touch.clientX - rect.left;
-    let y = touch.clientY - rect.top;
-
-    panels.forEach(panel => panel.move(x, y, canvas));
-    bateria.move(x, y, canvas);
-    
-    // Verificar colisões
-    let collisionDetected = panels.some(panel => checkCollisionBateria(panel, bateria));
-
-    
-        
-    // Redesenhar o painel
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawTable();
-    panels.forEach(panel => panel.draw(ctx, panels));
-    
-    
-    bateria.draw(ctx)
-});
-
-// Event listener para o toque de início e término
 canvas.addEventListener('touchstart', (e) => {
     let touch = e.touches[0];
     let rect = canvas.getBoundingClientRect();
@@ -471,9 +399,23 @@ canvas.addEventListener('touchstart', (e) => {
     bateria.startDrag(x, y);
 });
 
+canvas.addEventListener('touchmove', (e) => {
+    let touch = e.touches[0];
+    let rect = canvas.getBoundingClientRect();
+    let x = touch.clientX - rect.left;
+    let y = touch.clientY - rect.top;
+
+    panels.forEach(panel => panel.move(x, y, canvas));
+    bateria.move(x, y, canvas);
+    redraw();
+});
+
 canvas.addEventListener('touchend', () => {
     panels.forEach(panel => panel.stopDrag());
     bateria.stopDrag(panels);
+    redraw();
 });
 
+
+// Inicializa o desenho
 redraw();
