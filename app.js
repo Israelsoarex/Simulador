@@ -159,7 +159,7 @@ ctx.fillRect(this.x + this.width + 10, this.y + 20, rectWidth, rectHeight);
 // Definir a cor da fonte e o peso
 ctx.fillStyle = '#fff';
 ctx.font = 'bold 2rem Arial'; // Peso 700 e tamanho 1.4rem
-ctx.fillText('+', this.x + this.width + 15 + symbolPadding, this.y + 45); // Posição do "+"
+ctx.fillText('+', this.x + this.width +25 + symbolPadding, this.y + 45); // Posição do "+"
 
 // Retângulo para o símbolo "-"
 ctx.fillStyle = '#118AB2'; // Azul escuro
@@ -167,7 +167,7 @@ ctx.fillRect(this.x + this.width + 10, this.y + 60, rectWidth, rectHeight);
 ctx.font = 'bold 3rem Arial';
 // Definir a cor da fonte e o peso para o "-"
 ctx.fillStyle = '#fff';
-ctx.fillText('-', this.x + this.width + 15 + symbolPadding, this.y + 90); // Posição do "-"
+ctx.fillText('-', this.x + this.width + 25 + symbolPadding, this.y + 90); // Posição do "-"
     // Desenha o painel com borda arredondada
     drawRoundedRect(ctx, this.x - 4, this.y - 4, this.width + 16, this.height + 16, 15, '#ccc', borderColor, 3);
 
