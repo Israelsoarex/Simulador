@@ -366,7 +366,7 @@ class Bateria {
 
 
 // Criando uma instância da classe Bateria
-const bateria = new Bateria(200, 800, 7*unidade, 4*unidade);
+const bateria = new Bateria(200, 400, 7*unidade, 4*unidade);
 
 // Desenhando a bateria no canvas
 bateria.draw(ctx);
