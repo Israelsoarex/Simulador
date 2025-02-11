@@ -1,4 +1,67 @@
-body{
+body {
     background: beige;
     margin: 0;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+}
+
+#humburger {
+    background: #ffffffdd;
+    width: 12rem;
+    height: 100vh;
+    position: absolute;
+    left: -12rem;
+    transition: left 0.3s ease-in-out;
+    padding: 1rem;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+    box-sizing: border-box;
+}
+
+#humburger.open {
+    left: 0;
+}
+
+#holder {
+    width: 1.5rem;
+    height: 3.5rem;
+    position: absolute;
+    top: 50dvh;
+    right: -1.5rem;
+    background: none;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+#holder span {
+    background: rebeccapurple;
+    position: absolute;
+    right: -5%;
+    width: 3.5rem;
+    height: 3.5rem;
+    transform: rotate(45deg);
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.8rem;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background 0.2s;
+    flex-direction: column;
+    margin-bottom: 1rem;
+}
+
+.menu-item:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.menu-item i {
+    font-size: 3rem;
+    color: #043E7D;
+}
+
+.menu-item span{
+    color: #043E7D;
 }

@@ -1,4 +1,30 @@
+document.addEventListener("DOMContentLoaded", function () {
+    const humburger = document.getElementById("humburger");
+    const holder = document.getElementById("holder");
 
+    holder.addEventListener("click", function () {
+        // Alterna a classe 'open' no menu
+        humburger.classList.toggle("open");
+    });
+});
+
+let numDePainel = 0;
+let numDeBateria = 0;
+
+let painelDiv = document.querySelector("#painelDiv");
+let bateryDiv = document.querySelector("#bateryDiv");
+painelDiv.addEventListener("click", ()=>{
+    if(numDePainel < 2) {
+        panels.forEach(panel => panel.draw(ctx, panels));
+        numDePainel ++;
+    }
+});
+bateryDiv.addEventListener("click", ()=>{
+    if (numDeBateria < 1) {
+        bateria.draw(ctx);
+        numDeBateria ++;
+    }
+});
 let canvas = document.querySelector('canvas');
 let ctx = canvas.getContext('2d');
 
@@ -21,6 +47,9 @@ canvas.height = squareSize * 8;
 // Posição inicial do painel solar
 let panelX = unidade;
 let panelY = unidade;
+let isDrawingWire = false;
+let wireStartX, wireStartY;
+let wireEndX, wireEndY;
 
 // Desenha o tabuleiro
 function drawTable() {
@@ -141,33 +170,48 @@ class Painel {
         this.backupX = x;  
         this.backupY = y;
         this.label = label;
+        this.rectWidth = 40;
+        this.rectHeight = 30;
+        this.isPoloPosClicked = false;
+        this.isPoloNegClicked = false;
     }
 
     draw(ctx, panels) {
     this.colliding = panels.some(panel => panel !== this && checkCollision(this, panel)) || checkCollision(this, bateria);
     const borderColor = this.colliding ? 'red' : '#000';
+    // Cor da borda do polo positivo
+    let poloPosBorderColor = this.isPoloPosClicked ? 'yellow' : '#000';
+    let poloNegBorderColor = this.isPoloNegClicked ? 'yellow' : '#000';
     
     // Desenha os retângulos para os símbolos "+" e "-" à direita
-    const rectWidth = 40;
-    const rectHeight = 30;
+    /* const rectWidth = 40;
+    const rectHeight = 30; */
     const symbolPadding = 5;
 
     // Retângulo para o símbolo "+"
-ctx.fillStyle = '#EF476F'; // Azul escuro
-ctx.fillRect(this.x + this.width + 10, this.y + 20, rectWidth, rectHeight);
+ctx.fillStyle = '#EF476F'; // rosa choque 
+ctx.fillRect(this.x + this.width + 10, this.y + 20, this.rectWidth, this.rectHeight);
 
 // Definir a cor da fonte e o peso
 ctx.fillStyle = '#fff';
 ctx.font = 'bold 2rem Arial'; // Peso 700 e tamanho 1.4rem
-ctx.fillText('+', this.x + this.width +25 + symbolPadding, this.y + 45); // Posição do "+"
+ctx.fillText('+', this.x + this.width + 25 + symbolPadding, this.y + 45); // Posição do "+"
+// Adicionando borda amarela caso tenha sido clicado
+    ctx.strokeStyle = poloPosBorderColor;
+    ctx.lineWidth = 3;
+    ctx.strokeRect(this.x + this.width + 10, this.y + 20, this.rectWidth, this.rectHeight);
 
 // Retângulo para o símbolo "-"
 ctx.fillStyle = '#118AB2'; // Azul escuro
-ctx.fillRect(this.x + this.width + 10, this.y + 60, rectWidth, rectHeight);
+ctx.fillRect(this.x + this.width + 10, this.y + 60, this.rectWidth, this.rectHeight);
 ctx.font = 'bold 3rem Arial';
 // Definir a cor da fonte e o peso para o "-"
 ctx.fillStyle = '#fff';
 ctx.fillText('-', this.x + this.width + 25 + symbolPadding, this.y + 90); // Posição do "-"
+// Adicionando borda amarela caso tenha sido clicado (polo negativo)
+    ctx.strokeStyle = poloNegBorderColor;
+    ctx.lineWidth = 3;
+    ctx.strokeRect(this.x + this.width + 10, this.y + 60, this.rectWidth, this.rectHeight);
     // Desenha o painel com borda arredondada
     drawRoundedRect(ctx, this.x - 4, this.y - 4, this.width + 16, this.height + 16, 15, '#ccc', borderColor, 3);
 
@@ -210,11 +254,32 @@ ctx.fillText('-', this.x + this.width + 25 + symbolPadding, this.y + 90); // Pos
     ctx.fillStyle = '#000';
     ctx.fill();
 }
-
+//// painel clicado 
     isInside(x, y) {
         return x >= this.x && x <= this.x + this.width && y >= this.y && y <= this.y + this.height;
     }
-
+    // polo positivo clicado 
+    isInsidePosPolo(x,y){
+        return x >= this.x + this.width + 10 && x <= this.x + this.width + 10 + this.rectWidth && y >= this.y + 20 && y <= this.y + 20 + this.rectHeight;
+    }
+    //polo negativo clicado 
+    isInsideNegPolo(x, y) {
+    return x >= this.x + this.width + 10 && 
+           x <= this.x + this.width + 10 + this.rectWidth && 
+           y >= this.y + 60 &&  
+           y <= this.y + 60 + this.rectHeight;
+}
+    consolidador(x, y) {
+    if (this.isInsidePosPolo(x, y)) {
+        this.isPoloPosClicked = !this.isPoloPosClicked; // Alterna o estado
+        drawTable(); // Redesenha o tabuleiro
+        panels.forEach(panel => panel.draw(ctx, panels)); // Redesenha todos os painéis
+    } else if (this.isInsideNegPolo(x,y)) {
+        this.isPoloNegClicked = !this.isPoloNegClicked;
+        drawTable(); // Redesenha o tabuleiro
+        panels.forEach(panel => panel.draw(ctx, panels));
+    }
+}
     startDrag(x, y) {
         if (this.isInside(x, y)) {
             this.dragging = true;
@@ -247,6 +312,11 @@ ctx.fillText('-', this.x + this.width + 25 + symbolPadding, this.y + 90); // Pos
     }
 }
 
+canvas.addEventListener("click", (e)=>{
+    panels.forEach(panel => panel.consolidador(e.offsetX, e.offsetY));
+    console.log(`${e.offsetX}X e ${e.offsetY}Y`)
+})
+
 // Função para verificar colisões
 function checkCollision(obj1, obj2) {
     return !(obj1.x + obj1.width < obj2.x || 
@@ -259,13 +329,17 @@ function checkCollision(obj1, obj2) {
 function redraw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawTable();
-    panels.forEach(panel => panel.draw(ctx, panels));
-    bateria.draw(ctx);
+     if(numDePainel != 0) {
+         panels.forEach(panel => panel.draw(ctx, panels)); 
+     }
+    if(numDeBateria != 0) {
+        bateria.draw(ctx);
+    }
 }
 
 let panels = [
     new Painel(panelX, panelY, 12 * unidade, 8 * unidade, 4, 6),
-    new Painel(panelX + 800, panelY + 400, 14 * unidade, 7 * unidade, 4, 6)
+    /* new Painel(panelX + 800, panelY + 400, 14 * unidade, 7 * unidade, 4, 6) */
 ];
 
 
@@ -368,8 +442,7 @@ class Bateria {
 // Criando uma instância da classe Bateria
 const bateria = new Bateria(200, 400, 7*unidade, 4*unidade);
 
-// Desenhando a bateria no canvas
-bateria.draw(ctx);
+
 
 
 canvas.addEventListener('mousedown', (e) => {
@@ -417,85 +490,4 @@ canvas.addEventListener('touchend', () => {
 });
 
 
-// Inicializa o desenho
-redraw();
-let isDrawingWire = false;
-let wireStartX, wireStartY;
-let wireEndX, wireEndY;
 
-function startDrawingWire(x, y) {
-    isDrawingWire = true;
-    wireStartX = x;
-    wireStartY = y;
-    wireEndX = x;
-    wireEndY = y;
-}
-
-function updateWirePosition(x, y) {
-    if (isDrawingWire) {
-        wireEndX = x;
-        wireEndY = y;
-        redraw();
-    }
-}
-
-function stopDrawingWire() {
-    if (isDrawingWire) {
-        isDrawingWire = false;
-        redraw();
-    }
-}
-
-function drawWire(ctx) {
-    if (isDrawingWire) {
-        ctx.beginPath();
-        ctx.moveTo(wireStartX, wireStartY);
-        ctx.lineTo(wireEndX, wireEndY);
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-    }
-}
-
-// Adicionando os listeners para o mouse
-canvas.addEventListener('mousedown', (e) => {
-    startDrawingWire(e.offsetX, e.offsetY);
-});
-
-canvas.addEventListener('mousemove', (e) => {
-    updateWirePosition(e.offsetX, e.offsetY);
-});
-
-canvas.addEventListener('mouseup', () => {
-    stopDrawingWire();
-});
-
-// Adicionando os listeners para touch (para dispositivos móveis)
-canvas.addEventListener('touchstart', (e) => {
-    let touch = e.touches[0];
-    let rect = canvas.getBoundingClientRect();
-    let x = touch.clientX - rect.left;
-    let y = touch.clientY - rect.top;
-    startDrawingWire(x, y);
-});
-
-canvas.addEventListener('touchmove', (e) => {
-    let touch = e.touches[0];
-    let rect = canvas.getBoundingClientRect();
-    let x = touch.clientX - rect.left;
-    let y = touch.clientY - rect.top;
-    updateWirePosition(x, y);
-});
-
-canvas.addEventListener('touchend', () => {
-    stopDrawingWire();
-});
-
-// Modifique a função redraw para incluir o desenho do fio
-function redraw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawTable();
-    panels.forEach(panel => panel.draw(ctx, panels));
-    bateria.draw(ctx);
-    drawWire(ctx); // Adiciona o desenho do fio
-                        }
